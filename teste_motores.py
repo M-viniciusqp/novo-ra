@@ -7,19 +7,36 @@ CUIDADO: as rodas TRASEIRAS GIRAM. Deixe o carro LEVANTADO (rodas no ar) ou
 segure firme. Mantenha o dedo no Ctrl+C.
 
 Como funciona: pra cada motor, sobe o duty de 10% a 100% em degraus de 5%.
-Entre um degrau e outro o motor PARA por 0.6s -- assim cada degrau e uma
-PARTIDA de verdade (e e na partida que o atrito parado pega). Observe o
+Entre um degrau e outro o motor e FREADO e fica parado -- assim cada degrau
+e uma PARTIDA de verdade (e e na partida que o atrito parado pega). Observe o
 motor e anote em que % a roda comeca a girar sozinha. No fim, digite os dois
 valores e o script imprime as linhas pra colar no config.py.
 """
 
 import time
+import RPi.GPIO as GPIO
 from MotorModule import Motor
 import config
 
 PASSO = 5
-TEMPO_ON = 0.8
+TEMPO_ON = 1.0
 TEMPO_OFF = 0.6
+TEMPO_FREIO = 0.4
+
+
+def frear(m):
+    """Freio ATIVO da ponte H (IN1 = IN2, com ENABLE ligado), depois solta.
+
+    Sem isso um motor leve (inercia alta) continua rodando de graca durante
+    a pausa e o degrau seguinte nao e uma partida de verdade -- foi o que
+    aconteceu na 1a versao: o A nunca parava, so o B (mais preso) parava.
+    """
+    for p in (m.In1A, m.In2A, m.In1B, m.In2B):
+        GPIO.output(p, GPIO.HIGH)
+    m.pwmA.ChangeDutyCycle(100)
+    m.pwmB.ChangeDutyCycle(100)
+    time.sleep(TEMPO_FREIO)
+    m.drive(0.0)             # duty 0 e sentido pra frente de novo
 
 
 def varrer(nome, pwm, parar):
@@ -39,7 +56,7 @@ def main():
               config.SERVO_PIN)
     try:
         m.drive(0.0)            # so ajusta o sentido pra frente, duty 0
-        parar = lambda: (m.pwmA.ChangeDutyCycle(0), m.pwmB.ChangeDutyCycle(0))
+        parar = lambda: frear(m)
         varrer("A", m.pwmA, parar)
         varrer("B", m.pwmB, parar)
 
