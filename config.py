@@ -34,6 +34,23 @@ VELOCIDADE_PERDIDO = 0.22   # perdeu a pista, andando devagar procurando
 
 FPS_MINIMO_SEGURO = 15.0
 
+# ---- Partida / zona morta dos motores --------------------------------
+# Motor DC de brinquedo nao gira com duty baixo: o torque nao vence o atrito
+# parado (zona morta). Cada motor tem a sua, e o B costuma ser diferente do A.
+# Efeito no carro: com VELOCIDADE_PERDIDO = 0.22 (ou na partida) um motor gira
+# e o outro fica parado -> "atraso" num motor e o carro puxando pro lado.
+# Descubra o valor de cada um com:  python3 teste_motores.py
+MOTOR_MIN_DUTY_A = 0.0     # fracao (0..1) em que o motor A COMECA a girar
+MOTOR_MIN_DUTY_B = 0.0     # idem pro B. O comando 0..1 e remapeado pra
+                           # [MIN_DUTY .. 1], entao "pouco" ainda gira.
+MOTOR_FATOR_A = 1.0        # ganho final; baixe o do motor mais forte se um
+MOTOR_FATOR_B = 1.0        # lado ainda ganhar do outro depois de girar.
+
+# Chute de partida: ao sair do repouso, manda duty alto por um instante pra
+# vencer o atrito e depois volta pro valor pedido. 0 desliga.
+MOTOR_KICK_S    = 0.12
+MOTOR_KICK_DUTY = 1.0
+
 # =====================================================================
 # 4. CAMERA
 # =====================================================================
